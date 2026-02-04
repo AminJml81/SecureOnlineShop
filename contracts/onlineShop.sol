@@ -49,19 +49,15 @@ function registerProduct(string memory _name, uint256 _price, uint256 _quantity)
     }
 
 
+function listProducts() public view returns (Product[] memory)  {
+
+    return products;
+}
 
 
-
-
-
-
-
-
-
-
-
-
-
+function getProductCount() public view returns (uint256) {
+        return products.length;
+    }
 
 
 
