@@ -18,6 +18,7 @@ struct Order {
         uint256 productId;
         address buyer;
         uint256 amount;
+        uint256 quantity;
         uint256 purchaseTime; 
         OrderStatus status;  
     }
@@ -42,11 +43,11 @@ modifier validQuantity(uint256 _quantity) {
         _;
 }
 
-modifier canPurchase(uint256 _productId, uint256 _count) {
+modifier canPurchase(uint256 _productId, uint256 _quantity) {
         require(_productId < products.length, "Product does not exist");
-        require(products[_productId].quantity >= _count, "Out of stock");
+        require(products[_productId].quantity >= _quantity, "Out of stock");
         uint256 unitPrice = products[_productId].price;
-        require(msg.value == (unitPrice * _count), "Incorrect Price value sent");
+        require(msg.value == (unitPrice * _quantity), "Incorrect Price value sent");
         _;
     }
 
@@ -76,15 +77,16 @@ function getProductCount() public view returns (uint256) {
     }
 
 
-function buyProduct(uint256 _productId, uint256 _count) public payable canPurchase(_productId, _count) {
+function buyProduct(uint256 _productId, uint256 _quantity) public payable canPurchase(_productId, _quantity) {
         
         Product storage product = products[_productId];
-        product.quantity -= _count;
+        product.quantity -= _quantity;
 
         orders.push(Order({
             productId: _productId,
             buyer: msg.sender,
             amount: msg.value,
+            quantity: _quantity,
             purchaseTime: block.timestamp,
             status: OrderStatus.Pending
         }));
