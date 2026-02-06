@@ -5,6 +5,9 @@ pragma solidity 0.8.30;
 
 contract onlineShop {
 
+address payable public owner; // Owner is our main seller
+
+
 struct Product {
         uint256 id;
         string name;
@@ -26,6 +29,17 @@ struct Order {
 Product[] public products;
 Order[] public orders;
 
+
+
+constructor() {
+        owner = payable(msg.sender);
+    }
+
+
+modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner/seller can perform this action");
+        _;
+    }
 
 modifier validName(string memory _name) {
         require(bytes(_name).length > 0, "Product name cannot be empty");
@@ -52,7 +66,7 @@ modifier canPurchase(uint256 _productId, uint256 _quantity) {
     }
 
 function registerProduct(string memory _name, uint256 _price, uint256 _quantity) public
-        validName(_name) validPrice(_price) validQuantity(_quantity) 
+        onlyOwner validName(_name) validPrice(_price) validQuantity(_quantity) 
     {
         // product id is derived based on products length.
         uint256 newId = products.length;
@@ -92,7 +106,6 @@ function buyProduct(uint256 _productId, uint256 _quantity) public payable canPur
         }));
 
     }
-
 
 
 }
