@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain-OnlineShop</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 30px;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; background: linear-gradient(to left, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { background-color: var(--text-muted); cursor: not-allowed; }
+        button.red { background-color: var(--danger); }
+        button.green { background-color: var(--success); }
+
+        /* Panels */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #334155;
+        }
+
+        h2 { border-bottom: 1px solid #334155; padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; color: var(--primary); }
+
+        /* Forms */
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px 0;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        /* Lists */
+        .list-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .badge-pending { background: #f59e0b; color: black; }
+        .badge-completed { background: var(--success); color: white; }
+        .badge-refunded { background: var(--danger); color: white; }
+
+        #walletAddr { font-family: monospace; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1>Blockchain Online Shop </h1>
+                <small>with Timeout Based Auto Release Mechanism</small>
+            </div>
+            <div style="text-align: left;">
+                <button id="connectBtn" onclick="connectWallet()">Connet Wallet</button>
+                <div id="walletAddr" style="margin-top: 5px;"></div>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Admin Panel</h2>
+                <input type="text" id="pName" placeholder="Product Name">
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="pPrice" placeholder="Price (ETH)">
+                    <input type="number" id="pQty" placeholder="Quantity">
+                </div>
+                <button onclick="registerProduct()">➕ Register New Product</button>
+            </div>
+
+            <div class="card">
+                <h2>Buy product</h2>
+                <div id="productsList">
+                    <p class="text-muted">Loading Products</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>My Orders</h2>
+            <button onclick="loadOrders()" style="margin-bottom: 10px; background: #475569;">Update list</button>
+            <div id="ordersList">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const CONTRACT_ADDRESS = "0x44d1132FB0d12DcC9dea35c0827AB46102797a79"; 
+        const ABI = [
+            "function registerProduct(string name, uint256 price, uint256 quantity)",
+            "function buyProduct(uint256 productId, uint256 quantity) payable",
+            "function confirmOrder(uint256 _orderId)",
+            "function refundByTimeOut(uint256 _orderId)",
+            "function products(uint256) view returns (uint256 id, string name, uint256 price, uint256 quantity)",
+            "function getProductCount() view returns (uint256)",
+            "function getMyOrders() view returns (tuple(uint256 productId, address buyer, uint256 amount, uint256 quantity, uint256 purchaseTime, uint8 status)[])",
+            "function getAllOrders() view returns (tuple(uint256 productId, address buyer, uint256 amount, uint256 quantity, uint256 purchaseTime, uint8 status)[])",
+            "function owner() view returns (address)",
+            "function CONFIRMATION_WINDOW() view returns (uint256)"
+        ];
+
+        let provider, signer, contract, userAddress, isOwner;
+        let allProducts = [];
+
+        async function connectWallet() {
+            if (!window.ethereum) return alert("Please Install MetaMask");
+            
+            try {
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                userAddress = await signer.getAddress();
+                contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+                document.getElementById("connectBtn").innerText = "ُConnected Successfully";
+                document.getElementById("connectBtn").disabled = true;
+                document.getElementById("connectBtn").style.backgroundColor = "#10b981";
+                document.getElementById("walletAddr").innerText = userAddress.substring(0,6) + "..." + userAddress.substring(38);
+
+
+                const ownerAddr = await contract.owner();
+                isOwner = (ownerAddr.toLowerCase() === userAddress.toLowerCase());
+
+                loadProducts();
+                loadOrders();
+
+            } catch (err) {
+                console.error(err);
+                alert("Failed To Connect: " + err.message);
+            }
+        }
+
+        // --- Seller related Functions.
+        async function registerProduct() {
+            if(!isOwner) return alert("Just Owner can register Products!!!.");
+            const name = document.getElementById("pName").value;
+            const price = document.getElementById("pPrice").value;
+            const qty = document.getElementById("pQty").value;
+
+            try {
+                const tx = await contract.registerProduct(name, ethers.parseEther(price), qty);
+                alert("Request Sent, please wait");
+                await tx.wait();
+                loadProducts();
+                alert("Product Added Successfully.!");
+            } catch(err) { alert("Error: " + err.message); }
+        }
+
+        async function confirmOrder(index) {
+            try {
+                const tx = await contract.confirmOrder(index);
+                await tx.wait();
+                loadOrders();
+                alert("The order is confirmed and money is free.!");
+            } catch(err) { alert("Error: " + err.message); }
+        }
+
+        // Buyer Related Functions.
+        async function buyProduct(id, priceEth) {
+            try {
+                const tx = await contract.buyProduct(id, 1, { value: ethers.parseEther(priceEth) });
+                alert("The order is Submitted, waiting for Confirmation...");
+                await tx.wait();
+                loadOrders();
+                loadProducts();
+            } catch(err) { alert("Error: " + err.message); }
+        }
+
+        async function refundOrder(index) {
+            try {
+                const tx = await contract.refundByTimeOut(index);
+                await tx.wait();
+                loadOrders();
+                alert("Money Refunded Successfully!");
+            } catch(err) { 
+                console.error(err);
+                alert("Error Probably The Timeout is not Over."); 
+            }
+        }
+
+        //Loading Info
+        async function loadProducts() {
+            if(!contract) return;
+            const count = await contract.getProductCount();
+            const listDiv = document.getElementById("productsList");
+            listDiv.innerHTML = "";
+            allProducts = [];
+
+            for(let i=0; i<count; i++) {
+                const p = await contract.products(i);
+                const pData = { id: i, name: p.name, price: ethers.formatEther(p.price), qty: p.quantity };
+                allProducts.push(pData);
+
+                const item = document.createElement("div");
+                item.className = "list-item";
+                item.innerHTML = `
+                    <div>
+                        <strong>${pData.name}</strong><br>
+                        <small>${pData.price} ETH | Quantity: ${pData.qty}</small>
+                    </div>
+                    ${pData.qty > 0 ? 
+                        `<button onclick="buyProduct(${i}, '${pData.price}')">Buy</button>` : 
+                        `<button disabled>Unavailable</button>`
+                    }
+                `;
+                listDiv.appendChild(item);
+            }
+        }
+
+        async function loadOrders() {
+            if(!contract) return;
+            let orders = [];
+            
+            // admin(contract owner) sees all orders, buyer only his/her orders.
+            if(isOwner) {
+                orders = await contract.getAllOrders();
+            } else {
+                orders = await contract.getMyOrders();
+            }
+
+            const listDiv = document.getElementById("ordersList");
+            listDiv.innerHTML = "";
+
+            if(orders.length === 0) { listDiv.innerHTML = "<p>No orders were found</p>"; return; }
+
+            
+            const timeoutWindow = await contract.CONFIRMATION_WINDOW(); 
+            const now = Math.floor(Date.now() / 1000);
+
+            
+            orders.forEach((o, index) => {
+                // getting product name.
+                const product = allProducts.find(p => p.id == o.productId);
+                const pName = product ? product.name : "Unknown product";
+                
+                let statusBadge = "";
+                let actionBtn = "";
+
+                if(o.status == 0) { // Pending
+                    statusBadge = `<span class="badge badge-pending">Pending</span>`;
+                    
+                    if(isOwner) {
+                        actionBtn = `<button class="green" onclick="confirmOrder(${index})">Confirm</button>`;
+                    } else {
+                        // refund button logic
+                        const canRefund = now > (Number(o.purchaseTime) + Number(timeoutWindow));
+                        if(canRefund) {
+                            actionBtn = `<button class="red" onclick="refundOrder(${index})"> Refund Order</button>`;
+                        } else {
+                            actionBtn = `<small class="text-muted">Can't Sumbit refund request now!!!</small>`;
+                        }
+                    }
+                } 
+                else if (o.status == 1) statusBadge = `<span class="badge badge-completed">Completed</span>`;
+                else if (o.status == 2) statusBadge = `<span class="badge badge-refunded">Refunded</span>`;
+
+                const item = document.createElement("div");
+                item.className = "list-item";
+                item.innerHTML = `
+                    <div>
+                        <strong>order #${index} - ${pName}</strong><br>
+                        <small>price: ${ethers.formatEther(o.amount)} ETH | Seller: ${o.buyer.substring(0,4)}...</small>
+                    </div>
+                    <div style="text-align:left">
+                        ${statusBadge}<br>
+                        <div style="margin-top:5px">${actionBtn}</div>
+                    </div>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
