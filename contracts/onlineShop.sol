@@ -30,6 +30,8 @@ struct Order {
 Product[] public products;
 Order[] public orders;
 
+mapping(address => uint256[]) private buyerOrderIds;
+
 
 event OrderPlaced(uint256 indexed orderId, address indexed buyer, uint256 productId, uint256 amount);
 event OrderConfirmed(uint256 indexed orderId, address indexed seller, uint256 amountReleased);
@@ -127,6 +129,8 @@ function buyProduct(uint256 _productId, uint256 _quantity) public payable canPur
             status: OrderStatus.Pending
         }));
 
+        buyerOrderIds[msg.sender].push(orderId);
+
     emit OrderPlaced(orderId, msg.sender, _productId, msg.value);
     }
 
@@ -161,10 +165,29 @@ function refundByTimeOut(uint256 _orderId) public
         emit OrderRefunded(_orderId, msg.sender, order.amount);
     }
 
+function getMyOrders() public view returns (Order[] memory) {
+        uint256[] memory userOrderIds = buyerOrderIds[msg.sender];
+        
+        Order[] memory myOrders = new Order[](userOrderIds.length);
+
+        // add each order id of the corresponding seller in myOrders list.
+        for (uint i = 0; i < userOrderIds.length; i++) {
+            myOrders[i] = orders[userOrderIds[i]];
+        }
+        
+        return myOrders;
+    }
+
+function getAllOrders() public view onlyOwner returns (Order[] memory) {
+        return orders;
+    }
+
 // function to see live balance in contract.
 function getContractBalance() public view returns (uint256) {
     return address(this).balance;
 }
+
+
 
 }
 
