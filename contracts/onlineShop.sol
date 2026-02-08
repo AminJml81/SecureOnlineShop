@@ -6,6 +6,7 @@ pragma solidity 0.8.30;
 contract onlineShop {
 
 address payable public owner; // Owner is our main seller
+uint256 public constant CONFIRMATION_WINDOW = 2 minutes;
 
 
 struct Product {
@@ -19,7 +20,7 @@ enum OrderStatus { Pending, Completed, Refunded }
 
 struct Order {
         uint256 productId;
-        address buyer;
+        address payable buyer;
         uint256 amount;
         uint256 quantity;
         uint256 purchaseTime; 
@@ -30,6 +31,10 @@ Product[] public products;
 Order[] public orders;
 
 
+event OrderPlaced(uint256 indexed orderId, address indexed buyer, uint256 productId, uint256 amount);
+event OrderConfirmed(uint256 indexed orderId, address indexed seller, uint256 amountReleased);
+event OrderRefunded(uint256 indexed orderId, address indexed buyer, uint256 amountRefunded);
+
 
 constructor() {
         owner = payable(msg.sender);
@@ -38,6 +43,21 @@ constructor() {
 
 modifier onlyOwner() {
         require(msg.sender == owner, "Only owner/seller can perform this action");
+        _;
+    }
+
+modifier onlyBuyer(uint256 _orderId) {
+        require(orders[_orderId].buyer == msg.sender, "Not the buyer");
+        _;
+    }
+
+modifier isOrderPending(uint256 _orderId) {
+        require(orders[_orderId].status == OrderStatus.Pending, "Order handled already");
+        _;
+    }
+
+modifier hasTimedOut(uint256 _orderId) {
+        require(block.timestamp > orders[_orderId].purchaseTime + CONFIRMATION_WINDOW, "Timeout not reached yet");
         _;
     }
 
@@ -96,16 +116,56 @@ function buyProduct(uint256 _productId, uint256 _quantity) public payable canPur
         Product storage product = products[_productId];
         product.quantity -= _quantity;
 
+        uint256 orderId = orders.length;
+
         orders.push(Order({
             productId: _productId,
-            buyer: msg.sender,
+            buyer: payable (msg.sender),
             amount: msg.value,
             quantity: _quantity,
             purchaseTime: block.timestamp,
             status: OrderStatus.Pending
         }));
 
+    emit OrderPlaced(orderId, msg.sender, _productId, msg.value);
     }
 
 
+function confirmOrder(uint256 _orderId) public onlyOwner isOrderPending(_orderId) {
+        Order storage order = orders[_orderId];
+
+        order.status = OrderStatus.Completed;
+
+        (bool success, ) = owner.call{value: order.amount}("");
+        require(success, "Transfer to owner failed");
+
+        emit OrderConfirmed(_orderId, msg.sender, order.amount);
+    }
+
+
+function refundByTimeOut(uint256 _orderId) public 
+        onlyBuyer(_orderId) isOrderPending(_orderId) hasTimedOut(_orderId)
+{
+        
+        Order storage order = orders[_orderId];
+
+        order.status = OrderStatus.Refunded;
+
+        // reverting the quantity of the product.
+        products[order.productId].quantity += order.quantity;
+
+        // refund the buyer money back
+        (bool success, ) = order.buyer.call{value: order.amount}("");
+        require(success, "Refund failed");
+
+        emit OrderRefunded(_orderId, msg.sender, order.amount);
+    }
+
+// function to see live balance in contract.
+function getContractBalance() public view returns (uint256) {
+    return address(this).balance;
 }
+
+}
+
+
