@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blockchain-OnlineShop</title>
+    <title>Blockchain Online Shop</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
     <style>
         :root {
@@ -14,6 +14,7 @@
             --danger: #ef4444;
             --text: #f8fafc;
             --text-muted: #94a3b8;
+            --border: #334155;
         }
 
         body {
@@ -29,17 +30,28 @@
             margin: 0 auto;
         }
 
-        /* Header */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
         }
 
         h1 { margin: 0; font-size: 1.5rem; background: linear-gradient(to left, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .student-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .student-info strong { color: var(--primary); }
 
         button {
             background-color: var(--primary);
@@ -53,11 +65,10 @@
         }
 
         button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button:disabled { background-color: var(--text-muted); cursor: not-allowed; }
+        button:disabled { background-color: var(--text-muted); cursor: not-allowed; opacity: 0.7; }
         button.red { background-color: var(--danger); }
         button.green { background-color: var(--success); }
 
-        /* Panels */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
 
@@ -66,45 +77,53 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border: 1px solid #334155;
+            border: 1px solid var(--border);
         }
 
-        h2 { border-bottom: 1px solid #334155; padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; color: var(--primary); }
+        h2 { border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; color: var(--primary); }
 
-        /* Forms */
         input {
             width: 100%;
             padding: 10px;
             margin: 5px 0 15px 0;
             background-color: #0f172a;
-            border: 1px solid #334155;
+            border: 1px solid var(--border);
             color: white;
             border-radius: 6px;
             box-sizing: border-box;
         }
+        
+        input.qty-input {
+            width: 60px;
+            margin: 0 10px 0 0;
+            display: inline-block;
+            text-align: center;
+        }
 
-        /* Lists */
         .list-item {
             background: rgba(255,255,255,0.05);
-            padding: 10px;
+            padding: 15px;
             margin-bottom: 10px;
             border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-left: 4px solid var(--border);
         }
         
         .badge {
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: bold;
+            text-transform: uppercase;
         }
         .badge-pending { background: #f59e0b; color: black; }
         .badge-completed { background: var(--success); color: white; }
         .badge-refunded { background: var(--danger); color: white; }
 
-        #walletAddr { font-family: monospace; color: var(--text-muted); }
+        #walletAddr { font-family: monospace; color: var(--text-muted); font-size: 0.9rem;}
+        .text-muted { color: var(--text-muted); font-style: italic;}
     </style>
 </head>
 <body>
@@ -112,39 +131,45 @@
     <div class="container">
         <header>
             <div>
-                <h1>Blockchain Online Shop </h1>
-                <small>with Timeout Based Auto Release Mechanism</small>
+                <h1>Blockchain Online Shop</h1>
+                <small style="color: var(--text-muted);">With Auto-Refund Mechanism</small>
             </div>
-            <div style="text-align: left;">
-                <button id="connectBtn" onclick="connectWallet()">Connet Wallet</button>
-                <div id="walletAddr" style="margin-top: 5px;"></div>
+            <div style="text-align: right;">
+                <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+                <div id="walletAddr" style="margin-top: 5px;">Not Connected</div>
             </div>
         </header>
 
+        <div class="student-info">
+            <div>Student Name: <strong>Amin Jamali</strong></div> <div>Student ID: <strong>403443038</strong></div> </div>
+
         <div class="grid">
             <div class="card">
-                <h2>Admin Panel</h2>
+                <h2>Seller Dashboard</h2>
                 <input type="text" id="pName" placeholder="Product Name">
                 <div style="display: flex; gap: 10px;">
                     <input type="number" id="pPrice" placeholder="Price (ETH)">
-                    <input type="number" id="pQty" placeholder="Quantity">
+                    <input type="number" id="pQty" placeholder="Stock Quantity">
                 </div>
-                <button onclick="registerProduct()">➕ Register New Product</button>
+                <button onclick="registerProduct()">➕ Register Product</button>
             </div>
 
             <div class="card">
-                <h2>Buy product</h2>
+                <h2>Marketplace</h2>
                 <div id="productsList">
-                    <p class="text-muted">Loading Products</p>
+                    <p class="text-muted">Please connect wallet to view products...</p>
                 </div>
             </div>
         </div>
 
         <div class="card" style="margin-top: 20px;">
-            <h2>My Orders</h2>
-            <button onclick="loadOrders()" style="margin-bottom: 10px; background: #475569;">Update list</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="border: none; padding: 0; margin: 0;">Order History</h2>
+                <button onclick="loadOrders()" style="background: #475569; padding: 5px 15px; font-size: 0.9rem;">Refresh List</button>
+            </div>
             <div id="ordersList">
-                </div>
+                <p class="text-muted">No orders found.</p>
+            </div>
         </div>
     </div>
 
@@ -164,10 +189,10 @@
         ];
 
         let provider, signer, contract, userAddress, isOwner;
-        let allProducts = [];
+        let allProducts = []; // Global array to store product info
 
         async function connectWallet() {
-            if (!window.ethereum) return alert("Please Install MetaMask");
+            if (!window.ethereum) return alert("Please Install MetaMask to use this dApp.");
             
             try {
                 provider = new ethers.BrowserProvider(window.ethereum);
@@ -175,96 +200,138 @@
                 userAddress = await signer.getAddress();
                 contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-                document.getElementById("connectBtn").innerText = "ُConnected Successfully";
+                document.getElementById("connectBtn").innerText = "Wallet Connected";
                 document.getElementById("connectBtn").disabled = true;
-                document.getElementById("connectBtn").style.backgroundColor = "#10b981";
-                document.getElementById("walletAddr").innerText = userAddress.substring(0,6) + "..." + userAddress.substring(38);
-
+                document.getElementById("connectBtn").style.backgroundColor = "#10b981"; // Green
+                document.getElementById("walletAddr").innerText = userAddress.substring(0,6) + "..." + userAddress.slice(-4);
 
                 const ownerAddr = await contract.owner();
                 isOwner = (ownerAddr.toLowerCase() === userAddress.toLowerCase());
 
-                loadProducts();
-                loadOrders();
+                await loadProducts(); 
+                await loadOrders();
 
             } catch (err) {
                 console.error(err);
-                alert("Failed To Connect: " + err.message);
+                alert("Connection Failed: " + err.message);
             }
         }
 
-        // --- Seller related Functions.
+        // --- Seller Functions ---
         async function registerProduct() {
-            if(!isOwner) return alert("Just Owner can register Products!!!.");
+            if(!isOwner) return alert("Access Denied: Only the owner can register products.");
             const name = document.getElementById("pName").value;
             const price = document.getElementById("pPrice").value;
             const qty = document.getElementById("pQty").value;
 
+            if(!name || !price || !qty) return alert("Please fill in all fields.");
+
             try {
                 const tx = await contract.registerProduct(name, ethers.parseEther(price), qty);
-                alert("Request Sent, please wait");
+                alert("Transaction sent. Waiting for confirmation...");
                 await tx.wait();
                 loadProducts();
-                alert("Product Added Successfully.!");
+                alert("Product registered successfully!");
+                
+                // Clear inputs
+                document.getElementById("pName").value = "";
+                document.getElementById("pPrice").value = "";
+                document.getElementById("pQty").value = "";
             } catch(err) { alert("Error: " + err.message); }
         }
 
         async function confirmOrder(index) {
             try {
                 const tx = await contract.confirmOrder(index);
+                alert("Confirming order...");
                 await tx.wait();
                 loadOrders();
-                alert("The order is confirmed and money is free.!");
+                alert("Order confirmed. Funds released to seller.");
             } catch(err) { alert("Error: " + err.message); }
         }
 
-        // Buyer Related Functions.
+        // --- Buyer Functions ---
         async function buyProduct(id, priceEth) {
+            // 1. Get quantity from the specific input field for this product
+            const qtyInput = document.getElementById(`qty-${id}`);
+            const quantity = qtyInput ? qtyInput.value : 1;
+
+            if(quantity <= 0) return alert("Quantity must be at least 1");
+
             try {
-                const tx = await contract.buyProduct(id, 1, { value: ethers.parseEther(priceEth) });
-                alert("The order is Submitted, waiting for Confirmation...");
+                // 2. Calculate total price (Price * Quantity)
+                // BigInt math for precision with Wei
+                const priceWei = ethers.parseEther(priceEth);
+                const totalValue = priceWei * BigInt(quantity);
+
+                const tx = await contract.buyProduct(id, quantity, { value: totalValue });
+                alert("Order submitted. Waiting for blockchain confirmation...");
                 await tx.wait();
-                loadOrders();
-                loadProducts();
-            } catch(err) { alert("Error: " + err.message); }
+                
+                // Refresh data
+                loadProducts(); // To update stock
+                loadOrders();   // To show new order
+                alert("Purchase successful!");
+            } catch(err) { 
+                console.error(err);
+                alert("Transaction failed: " + err.message); 
+            }
         }
 
         async function refundOrder(index) {
             try {
                 const tx = await contract.refundByTimeOut(index);
+                alert("Requesting refund...");
                 await tx.wait();
                 loadOrders();
-                alert("Money Refunded Successfully!");
+                alert("Refund successful! Money returned to buyer.");
             } catch(err) { 
                 console.error(err);
-                alert("Error Probably The Timeout is not Over."); 
+                alert("Refund Failed: The timeout period may not have passed yet, or you are not authorized."); 
             }
         }
 
-        //Loading Info
+        // --- Data Loading Functions ---
         async function loadProducts() {
             if(!contract) return;
             const count = await contract.getProductCount();
             const listDiv = document.getElementById("productsList");
             listDiv.innerHTML = "";
-            allProducts = [];
+            allProducts = []; // Reset global array
+
+            if(count == 0) {
+                listDiv.innerHTML = "<p class='text-muted'>No products available yet.</p>";
+                return;
+            }
 
             for(let i=0; i<count; i++) {
                 const p = await contract.products(i);
-                const pData = { id: i, name: p.name, price: ethers.formatEther(p.price), qty: p.quantity };
+                // Store in global array for Order List to use later
+                const pData = { id: i, name: p.name, price: ethers.formatEther(p.price), qty: Number(p.quantity) };
                 allProducts.push(pData);
 
                 const item = document.createElement("div");
                 item.className = "list-item";
+                
+                // Logic to show Buy button or Out of Stock
+                let actionHtml = "";
+                if(pData.qty > 0) {
+                    actionHtml = `
+                        <div style="display:flex; align-items:center;">
+                            <input type="number" id="qty-${pData.id}" class="qty-input" min="1" max="${pData.qty}" value="1">
+                            <button onclick="buyProduct(${pData.id}, '${pData.price}')">Buy</button>
+                        </div>
+                    `;
+                } else {
+                    actionHtml = `<button disabled>Out of Stock</button>`;
+                }
+
                 item.innerHTML = `
                     <div>
                         <strong>${pData.name}</strong><br>
-                        <small>${pData.price} ETH | Quantity: ${pData.qty}</small>
+                        <small style="color: #cbd5e1;">Price: ${pData.price} ETH | Stock: ${pData.qty}</small>
                     </div>
-                    ${pData.qty > 0 ? 
-                        `<button onclick="buyProduct(${i}, '${pData.price}')">Buy</button>` : 
-                        `<button disabled>Unavailable</button>`
-                    }
+                    ${actionHtml}
                 `;
                 listDiv.appendChild(item);
             }
@@ -272,9 +339,14 @@
 
         async function loadOrders() {
             if(!contract) return;
+            
+            // Ensure products are loaded first to map Names to IDs
+            if(allProducts.length === 0) {
+                await loadProducts();
+            }
+
             let orders = [];
             
-            // admin(contract owner) sees all orders, buyer only his/her orders.
             if(isOwner) {
                 orders = await contract.getAllOrders();
             } else {
@@ -284,33 +356,35 @@
             const listDiv = document.getElementById("ordersList");
             listDiv.innerHTML = "";
 
-            if(orders.length === 0) { listDiv.innerHTML = "<p>No orders were found</p>"; return; }
+            if(orders.length === 0) { listDiv.innerHTML = "<p class='text-muted'>No orders found.</p>"; return; }
 
-            
             const timeoutWindow = await contract.CONFIRMATION_WINDOW(); 
             const now = Math.floor(Date.now() / 1000);
 
-            
             orders.forEach((o, index) => {
-                // getting product name.
+                // Find product name using the ID from the order
                 const product = allProducts.find(p => p.id == o.productId);
-                const pName = product ? product.name : "Unknown product";
+                const pName = product ? product.name : `Unknown Product (ID: ${o.productId})`;
                 
                 let statusBadge = "";
                 let actionBtn = "";
 
+                // Status Logic
                 if(o.status == 0) { // Pending
                     statusBadge = `<span class="badge badge-pending">Pending</span>`;
                     
                     if(isOwner) {
-                        actionBtn = `<button class="green" onclick="confirmOrder(${index})">Confirm</button>`;
+                        actionBtn = `<button class="green" onclick="confirmOrder(${index})">Confirm Order</button>`;
                     } else {
-                        // refund button logic
-                        const canRefund = now > (Number(o.purchaseTime) + Number(timeoutWindow));
+                        // Refund Logic
+                        const purchaseTime = Number(o.purchaseTime);
+                        const windowTime = Number(timeoutWindow);
+                        const canRefund = now > (purchaseTime + windowTime);
+                        
                         if(canRefund) {
-                            actionBtn = `<button class="red" onclick="refundOrder(${index})"> Refund Order</button>`;
+                            actionBtn = `<button class="red" onclick="refundOrder(${index})">Request Refund</button>`;
                         } else {
-                            actionBtn = `<small class="text-muted">Can't Sumbit refund request now!!!</small>`;
+                            actionBtn = `<small class="text-muted">Refund available after timeout</small>`;
                         }
                     }
                 } 
@@ -319,14 +393,18 @@
 
                 const item = document.createElement("div");
                 item.className = "list-item";
+                
                 item.innerHTML = `
                     <div>
-                        <strong>order #${index} - ${pName}</strong><br>
-                        <small>price: ${ethers.formatEther(o.amount)} ETH | Seller: ${o.buyer.substring(0,4)}...</small>
+                        <strong>Order #${index} - ${pName}</strong><br>
+                        <small style="color: #cbd5e1;">
+                            Total: ${ethers.formatEther(o.amount)} ETH | Qty: ${o.quantity} <br>
+                            Buyer: ${o.buyer.substring(0,6)}...${o.buyer.slice(-4)}
+                        </small>
                     </div>
-                    <div style="text-align:left">
+                    <div style="text-align:right">
                         ${statusBadge}<br>
-                        <div style="margin-top:5px">${actionBtn}</div>
+                        <div style="margin-top:8px">${actionBtn}</div>
                     </div>
                 `;
                 listDiv.appendChild(item);
