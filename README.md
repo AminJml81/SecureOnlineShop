@@ -72,4 +72,4 @@ Since this project uses a serverless frontend architecture (connecting directly 
 
 **Amin Jamali** 
 ---
-*This project was developed for the Blockchain Programming Course.*
+*This project was developed for the Blockchain Course.*
