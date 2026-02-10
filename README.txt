@@ -1,28 +1,76 @@
-REMIX DEFAULT WORKSPACE
+# 🛒 Blockchain Online Shop
 
-Remix default workspace is present when:
-i. Remix loads for the very first time 
-ii. A new workspace is created with 'Default' template
-iii. There are no files existing in the File Explorer
+A decentralized marketplace DApp built on the Ethereum blockchain that ensures trust between buyers and sellers using a **Timeout-Based Auto-Release** mechanism.
 
-This workspace contains 3 directories:
+![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=Ethereum&logoColor=white)
+![Solidity](https://img.shields.io/badge/Solidity-%23363636.svg?style=for-the-badge&logo=solidity&logoColor=white)
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
 
-1. 'contracts': Holds three contracts with increasing levels of complexity.
-2. 'scripts': Contains four typescript files to deploy a contract. It is explained below.
-3. 'tests': Contains one Solidity test file for 'Ballot' contract & one JS test file for 'Storage' contract.
+## 📄 Project Description
 
-SCRIPTS
+This project is a smart contract-based shopping system that manages the interaction between a **Seller (Admin)** and multiple **Buyers**. 
+The core problem in online commerce is trust: Buyers fear paying without receiving goods, and Sellers fear sending goods without payment. This project solves this using an **Escrow System**:
+1. Funds are locked in the contract upon purchase.
+2. Funds are released to the seller only after they confirm the order.
+3. If the seller fails to confirm within a specific timeframe, the buyer can claim a **Refund**.
 
-The 'scripts' folder has four typescript files which help to deploy the 'Storage' contract using 'web3.js' and 'ethers.js' libraries.
+## ✨ Features
 
-For the deployment of any other contract, just update the contract name from 'Storage' to the desired contract and provide constructor arguments accordingly 
-in the file `deploy_with_ethers.ts` or  `deploy_with_web3.ts`
+### 👑 Seller (Owner/Admin) Role
+* **Product Management:** Define and register new products (Name, Price in ETH, Quantity).
+* **Order Oversight:** View a complete list of all orders placed in the system.
+* **Order Confirmation:** Confirm orders to release the locked funds to their wallet and complete the purchase process.
 
-In the 'tests' folder there is a script containing Mocha-Chai unit tests for 'Storage' contract.
+### 🛍️ Buyer Role
+* **Marketplace Access:** View available products and place orders via MetaMask.
+* **Order History:** Access a personal history of all purchased items and their statuses.
+* **Auto-Refund:** Request a full refund if the Seller does not confirm the order within the defined **Timeout Window**.
 
-To run a script, right click on file name in the file explorer and click 'Run'. Remember, Solidity file must already be compiled.
-Output from script will appear in remix terminal.
+## 🛠️ Technical Architecture
 
-Please note, require/import is supported in a limited manner for Remix supported modules.
-For now, modules supported by Remix are ethers, web3, swarmgw, chai, multihashes, remix and hardhat only for hardhat.ethers object/plugin.
-For unsupported modules, an error like this will be thrown: '<module_name> module require is not supported by Remix IDE' will be shown.
+This project is implemented using the following stack:
+
+* **Blockchain Network:** Ethereum (Deployed on **Sepolia Testnet**).
+* **Smart Contract Language:** [Solidity](https://docs.soliditylang.org/) (Version `0.8.30`).
+* **Frontend Interface:** Vanilla HTML/CSS/JS.
+* **Blockchain Interaction:** [Ethers.js](https://docs.ethers.org/v6/) library.
+* **Wallet Connection:** [MetaMask](https://metamask.io/).
+
+## 🧩 Smart Contract Logic
+
+The contract relies on secure state management:
+
+1.  **Structs:**
+    * `Product`: Stores ID, Name, Price, and Quantity.
+    * `Order`: Stores Buyer Address, Amount, Status (Pending/Completed/Refunded), and Purchase Time.
+2.  **Mappings:** Uses `buyerOrderIds` to map user addresses to their specific order IDs for efficient retrieval.
+3.  **Escrow Logic:**
+    * **Buy:** `msg.value` is stored in the contract, not sent to the seller immediately. Status -> `Pending`.
+    * **Refund:** The `refundByTimeOut` function checks `block.timestamp`. If `Current Time > Purchase Time + Timeout`, the contract allows the buyer to withdraw the funds.
+
+## 🚀 How to Run
+
+Since this project uses a serverless frontend architecture (connecting directly to the blockchain), no Node.js installation is strictly required to run the UI.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git)
+    ```
+2.  **Open the Interface:**
+    Simply open the `index.html` file in any modern browser (Chrome/Firefox).
+    * *Note: For better compatibility with MetaMask, it is recommended to use a local server (e.g., VS Code Live Server).*
+3.  **Connect Wallet:**
+    Ensure you have **MetaMask** installed and switched to the **Sepolia Testnet**. Click "Connect Wallet".
+
+## 📸 Screenshots
+
+| Seller Dashboard | User Marketplace |
+|:---:|:---:|
+| ! | ![Marketplace](path/to/image2.png) |
+
+
+## 👤 Author
+
+**Amin Jamali** 
+---
+*This project was developed for the Blockchain Programming Course.*
