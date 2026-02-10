@@ -64,10 +64,9 @@ Since this project uses a serverless frontend architecture (connecting directly 
 
 ## 📸 Screenshots
 
-| Seller Dashboard | User Marketplace |
-|:---:|:---:|
-| ! | ![Marketplace](path/to/image2.png) |
-
+| Seller Dashboard | User Marketplace | Seller OrderHistory | Buyer OrderHistory |
+|:---:|:---:|:---:|:---:|
+| <img width="800" height="600" alt="seller-dashboard2" src="https://github.com/user-attachments/assets/1d778644-6b5c-46cb-bd48-2b37496525cc" />|<img width="600" height="400" alt="marketplace" src="https://github.com/user-attachments/assets/6697b2c5-5bb9-41a7-87de-a1d6c0196990" />| <img width="800" height="600" alt="order-added-to-orders-owner-part" src="https://github.com/user-attachments/assets/2b5ec7f2-8958-4d16-b896-2718da7b4fb1" />|<img width="800" height="600" alt="order-added-to-orders" src="https://github.com/user-attachments/assets/4b54bc8f-4727-4cec-b97a-b999b24ba24a" />|
 
 ## 👤 Author
 
