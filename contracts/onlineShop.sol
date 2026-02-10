@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
@@ -186,7 +185,6 @@ function getAllOrders() public view onlyOwner returns (Order[] memory) {
 function getContractBalance() public view returns (uint256) {
     return address(this).balance;
 }
-
 
 
 }
